@@ -1,24 +1,24 @@
 import { authModalState } from "@/atoms/authModalAtom";
 import AuthModal from "@/components/Modals/AuthModal";
 import Navbar from "@/components/Navbar/Navbar";
-import { useAuthState } from "react-firebase-hooks/auth";
-import { auth } from "@/firebase/firebase";
 import { useRecoilValue } from "recoil";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import Image from "next/image";
+
 type AuthPageProps = {};
 
 const AuthPage: React.FC<AuthPageProps> = () => {
 	const authModal = useRecoilValue(authModalState);
-	const [user, loading, error] = useAuthState(auth);
+	const [user, setUser] = useState(null);  // Adjust as per your user management system
 	const [pageLoading, setPageLoading] = useState(true);
 	const router = useRouter();
 
 	useEffect(() => {
+		// Replace this logic with however you're determining user authentication now
 		if (user) router.push("/");
-		if (!loading && !user) setPageLoading(false);
-	}, [user, router, loading]);
+		if (!user) setPageLoading(false);
+	}, [user, router]);
 
 	if (pageLoading) return null;
 
@@ -35,3 +35,4 @@ const AuthPage: React.FC<AuthPageProps> = () => {
 	);
 };
 export default AuthPage;
+

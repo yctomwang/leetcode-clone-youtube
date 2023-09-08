@@ -6,96 +6,87 @@ import { vscodeDark } from "@uiw/codemirror-theme-vscode";
 import { javascript } from "@codemirror/lang-javascript";
 import EditorFooter from "./EditorFooter";
 import { Problem } from "@/utils/types/problem";
-import { useAuthState } from "react-firebase-hooks/auth";
-import { auth, firestore } from "@/firebase/firebase";
 import { toast } from "react-toastify";
 import { problems } from "@/utils/problems";
 import { useRouter } from "next/router";
-import { arrayUnion, doc, updateDoc } from "firebase/firestore";
 import useLocalStorage from "@/hooks/useLocalStorage";
 
 type PlaygroundProps = {
-	problem: Problem;
-	setSuccess: React.Dispatch<React.SetStateAction<boolean>>;
-	setSolved: React.Dispatch<React.SetStateAction<boolean>>;
+    problem: Problem;
+    setSuccess: React.Dispatch<React.SetStateAction<boolean>>;
+    setSolved: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
 export interface ISettings {
-	fontSize: string;
-	settingsModalIsOpen: boolean;
-	dropdownIsOpen: boolean;
+    fontSize: string;
+    settingsModalIsOpen: boolean;
+    dropdownIsOpen: boolean;
 }
 
 const Playground: React.FC<PlaygroundProps> = ({ problem, setSuccess, setSolved }) => {
-	const [activeTestCaseId, setActiveTestCaseId] = useState<number>(0);
-	let [userCode, setUserCode] = useState<string>(problem.starterCode);
-
-	const [fontSize, setFontSize] = useLocalStorage("lcc-fontSize", "16px");
-
-	const [settings, setSettings] = useState<ISettings>({
-		fontSize: fontSize,
-		settingsModalIsOpen: false,
-		dropdownIsOpen: false,
-	});
-
-	const [user] = useAuthState(auth);
-	const {
-		query: { pid },
-	} = useRouter();
+    const [activeTestCaseId, setActiveTestCaseId] = useState<number>(0);
+    let [userCode, setUserCode] = useState<string>(problem.starterCode);
+    const [fontSize, setFontSize] = useLocalStorage("lcc-fontSize", "16px");
+    const [settings, setSettings] = useState<ISettings>({
+        fontSize: fontSize,
+        settingsModalIsOpen: false,
+        dropdownIsOpen: false,
+    });
+    const user = useCurrentUser();
+    const { query: { pid } } = useRouter();
 
 	const handleSubmit = async () => {
-		if (!user) {
-			toast.error("Please login to submit your code", {
-				position: "top-center",
-				autoClose: 3000,
-				theme: "dark",
-			});
-			return;
-		}
-		try {
-			userCode = userCode.slice(userCode.indexOf(problem.starterFunctionName));
-			const cb = new Function(`return ${userCode}`)();
-			const handler = problems[pid as string].handlerFunction;
+    if (!user) {
+        toast.error("Please login to submit your code", {
+            position: "top-center",
+            autoClose: 3000,
+            theme: "dark",
+        });
+        return;
+    }
+    try {
+        userCode = userCode.slice(userCode.indexOf(problem.starterFunctionName));
+        const cb = new Function(`return ${userCode}`)();
+        const handler = problems[pid as string].handlerFunction;
 
-			if (typeof handler === "function") {
-				const success = handler(cb);
-				if (success) {
-					toast.success("Congrats! All tests passed!", {
-						position: "top-center",
-						autoClose: 3000,
-						theme: "dark",
-					});
-					setSuccess(true);
-					setTimeout(() => {
-						setSuccess(false);
-					}, 4000);
+        if (typeof handler === "function") {
+            const success = handler(cb);
+            if (success) {
+                toast.success("Congrats! All tests passed!", {
+                    position: "top-center",
+                    autoClose: 3000,
+                    theme: "dark",
+                });
+                setSuccess(true);
+                setTimeout(() => {
+                    setSuccess(false);
+                }, 4000);
 
-					const userRef = doc(firestore, "users", user.uid);
-					await updateDoc(userRef, {
-						solvedProblems: arrayUnion(pid),
-					});
-					setSolved(true);
-				}
-			}
-		} catch (error: any) {
-			console.log(error.message);
-			if (
-				error.message.startsWith("AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:")
-			) {
-				toast.error("Oops! One or more test cases failed", {
-					position: "top-center",
-					autoClose: 3000,
-					theme: "dark",
-				});
-			} else {
-				toast.error(error.message, {
-					position: "top-center",
-					autoClose: 3000,
-					theme: "dark",
-				});
-			}
-		}
-	};
+                // Update the mock user's solved problems in local storage
+                updateUserSolvedProblems(pid as string);
+                setSolved(true);
+            }
+        }
+    } catch (error: any) {
+        console.log(error.message);
+        if (
+            error.message.startsWith("AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:")
+        ) {
+            toast.error("Oops! One or more test cases failed", {
+                position: "top-center",
+                autoClose: 3000,
+                theme: "dark",
+            });
+        } else {
+            toast.error(error.message, {
+                position: "top-center",
+                autoClose: 3000,
+                theme: "dark",
+            });
+        }
+    }
+};
+
 
 	useEffect(() => {
 		const code = localStorage.getItem(`code-${pid}`);
@@ -170,4 +161,29 @@ const Playground: React.FC<PlaygroundProps> = ({ problem, setSuccess, setSolved 
 		</div>
 	);
 };
+    function useCurrentUser() {
+        const [user, setUser] = useState<null | { email: string, uid: string }>(null);
+
+        useEffect(() => {
+            const storedUser = localStorage.getItem('mockUser');
+            if (storedUser) {
+                setUser(JSON.parse(storedUser));
+            }
+        }, []);
+
+        return user;
+    }
+
+    function updateUserSolvedProblems(pid: string) {
+        const storedUser = localStorage.getItem('mockUser');
+        if (storedUser) {
+            const user = JSON.parse(storedUser);
+            user.solvedProblems = user.solvedProblems || [];
+            if (!user.solvedProblems.includes(pid)) {
+                user.solvedProblems.push(pid);
+            }
+            localStorage.setItem('mockUser', JSON.stringify(user));
+        }
+    }
+
 export default Playground;

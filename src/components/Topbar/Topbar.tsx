@@ -1,24 +1,22 @@
-import { auth } from "@/firebase/firebase";
 import Link from "next/link";
 import React from "react";
-import { useAuthState } from "react-firebase-hooks/auth";
-import Logout from "../Buttons/Logout";
-import { useSetRecoilState } from "recoil";
-import { authModalState } from "@/atoms/authModalAtom";
-import Image from "next/image";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { BsList } from "react-icons/bs";
 import Timer from "../Timer/Timer";
 import { useRouter } from "next/router";
 import { problems } from "@/utils/problems";
 import { Problem } from "@/utils/types/problem";
+import Logout from "../Buttons/Logout"; // If Logout is also Firebase dependent, you might need to adjust it too.
+import { useSetRecoilState } from "recoil";
+import { authModalState } from "@/atoms/authModalAtom";
+import Image from "next/image";
 
 type TopbarProps = {
 	problemPage?: boolean;
 };
 
 const Topbar: React.FC<TopbarProps> = ({ problemPage }) => {
-	const [user] = useAuthState(auth);
+	const user = null; // Replace with your new method to get the authenticated user
 	const setAuthModalState = useSetRecoilState(authModalState);
 	const router = useRouter();
 
@@ -102,7 +100,7 @@ const Topbar: React.FC<TopbarProps> = ({ problemPage }) => {
 								z-40 group-hover:scale-100 scale-0 
 								transition-all duration-300 ease-in-out'
 							>
-								<p className='text-sm'>{user.email}</p>
+								<p className='text-sm'>{user}</p>
 							</div>
 						</div>
 					)}
