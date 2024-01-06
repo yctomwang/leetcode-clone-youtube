@@ -1,0 +1,77 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: CloudFormation template for running Docker containers (Flask, PostgreSQL, Celery, RabbitMQ) on EC2
+
+Parameters:
+  InstanceType:
+    Description: EC2 instance type
+    Type: String
+    Default: t2.medium
+    AllowedValues:
+      - t2.medium
+      - t2.large
+      - t3.medium
+      - t3.large
+  KeyName:
+    Description: Key pair for SSH access
+    Type: AWS::EC2::KeyPair::KeyName
+
+Resources:
+  EC2Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: !Ref InstanceType
+      KeyName: !Ref KeyName
+      ImageId: ami-04f5097681773b989 # here is the value for ubuntu
+      SecurityGroups:
+        - !Ref InstanceSecurityGroup
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          # Install Docker
+          sudo apt-get update
+          sudo apt-get install -y apt-transport-https ca-certificates curl software-properties-common git
+          curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+          sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+          sudo apt-get update
+          sudo apt-get install -y docker-ce
+          # Start Docker and enable it to run on boot
+          sudo systemctl start docker
+          sudo systemctl enable docker
+
+          # Clone the Flask and Celery repositories
+          git clone https://github.com/yctomwang/backend-wf.git
+
+          # Build Docker images from the Dockerfiles in the repositories
+          sudo docker build -t your-flask-image-name -f backend-wf/Dockerfile ./backend-wf
+          sudo docker build -t your-celery-image-name -f backend-wf/Dockerfilecelery ./backend-wf
+
+          # Run the Docker containers
+          sudo docker run -d --name my-flask-container your-flask-image-name
+          sudo docker run -d --name my-celery-container your-celery-image-name
+          sudo docker run -d --name thedatabase -e POSTGRES_USER=test_pam -e POSTGRES_PASSWORD=test_pam -p 5432:5432 postgres:latest
+          sudo docker run -d --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:3-management
+          # ... additional docker run commands for other services like RabbitMQ, PostgreSQL, etc.
+
+
+  InstanceSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Enable SSH and necessary ports
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0 # Adjust as needed
+        - IpProtocol: tcp
+          FromPort: 5000
+          ToPort: 5000
+          CidrIp: 0.0.0.0/0 # Flask app port
+        # Add other ports as needed for PostgreSQL, RabbitMQ, etc.
+
+Outputs:
+  InstanceId:
+    Description: The Instance ID
+    Value: !Ref EC2Instance
+  PublicIP:
+    Description: The Public IP address of the instance
+    Value: !GetAtt EC2Instance.PublicIp

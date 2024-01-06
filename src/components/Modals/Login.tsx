@@ -5,7 +5,7 @@ import { useSetRecoilState } from "recoil";
 import { toast } from "react-toastify";
 
 type LoginProps = {};
-fetch('http://localhost:8080').then(res => res.json()).then(data=> console.log(data))
+// fetch('http://localhost:8080').then(res => res.json()).then(data=> console.log(data))
 
 const Login: React.FC<LoginProps> = () => {
 	const setAuthModalState = useSetRecoilState(authModalState);
@@ -39,7 +39,7 @@ const Login: React.FC<LoginProps> = () => {
 
 			const data = await response.json();
 
-			if (response.status === 200) {
+			if (response.status === 404) {
 				router.push("/");
 			} else {
 				toast.error(data.message, { position: "top-center", autoClose: 3000, theme: "dark" });
@@ -53,7 +53,7 @@ const Login: React.FC<LoginProps> = () => {
 	};
 
 	return (
-		<form className='space-y-6 px-6 pb-4' onSubmit={handleLogin}>
+		<form className='space-y-6 px-6 pb-4' >
 			<h3 className='text-xl font-medium text-white'>Sign in to LeetClone</h3>
 			<div>
 				<label htmlFor='email' className='text-sm font-medium block mb-2 text-gray-300'>

@@ -5,6 +5,13 @@ const starterCodeTwoSum = `function twoSum(nums,target){
   // Write your code here
 };`;
 
+//here is the python code for 2 sum
+const starterCodeTwoSumPython = `
+def twoSum(nums :List[int], target : int):
+    # Write your code here
+    pass
+`;
+
 // checks if the user has the correct code
 const handlerTwoSum = (fn: any) => {
 	// fn is the callback that user's code is passed into
@@ -77,7 +84,7 @@ export const twoSum: Problem = {
 <strong>Only one valid answer exists.</strong>
 </li>`,
 	handlerFunction: handlerTwoSum,
-	starterCode: starterCodeTwoSum,
+	starterCode: starterCodeTwoSumPython,
 	order: 1,
 	starterFunctionName: "function twoSum(",
 };

@@ -2,6 +2,10 @@ import { useState, useEffect } from "react";
 import { AiOutlineFullscreen, AiOutlineFullscreenExit, AiOutlineSetting } from "react-icons/ai";
 import { ISettings } from "../Playground";
 import SettingsModal from "@/components/Modals/SettingsModal";
+import { authModalState } from "@/atoms/authModalAtom";
+import {languageState} from "@/atoms/languageState";
+import {useRecoilState} from "recoil";
+
 
 type PreferenceNavProps = {
 	settings: ISettings;
@@ -10,7 +14,7 @@ type PreferenceNavProps = {
 
 const PreferenceNav: React.FC<PreferenceNavProps> = ({ setSettings, settings }) => {
 	const [isFullScreen, setIsFullScreen] = useState(false);
-
+	 const [language, setLanguage] = useRecoilState(languageState);
 	const handleFullScreen = () => {
 		if (isFullScreen) {
 			document.exitFullscreen();
@@ -40,9 +44,16 @@ const PreferenceNav: React.FC<PreferenceNavProps> = ({ setSettings, settings }) 
 	return (
 		<div className='flex items-center justify-between bg-dark-layer-2 h-11 w-full '>
 			<div className='flex items-center text-white'>
-				<button className='flex cursor-pointer items-center rounded focus:outline-none bg-dark-fill-3 text-dark-label-2 hover:bg-dark-fill-2  px-2 py-1.5 font-medium'>
+				<button className='flex cursor-pointer items-center rounded focus:outline-none bg-dark-fill-3 text-dark-label-2 hover:bg-dark-fill-2  px-2 py-1.5 font-medium' onClick={() => setLanguage("javascript")}>
 					<div className='flex items-center px-1'>
-						<div className='text-xs text-label-2 dark:text-dark-label-2'>JavaScript</div>
+						<div className='text-xs text-label-2 dark:text-dark-label-2'>typescript</div>
+					</div>
+				</button>
+
+
+				<button className='flex cursor-pointer items-center rounded focus:outline-none bg-dark-fill-3 text-dark-label-2 hover:bg-dark-fill-2  px-2 py-1.5 font-medium' onClick={() => setLanguage("python")}>
+					<div className='flex items-center px-1'>
+						<div className='text-xs text-label-2 dark:text-dark-label-2'>python</div>
 					</div>
 				</button>
 			</div>
